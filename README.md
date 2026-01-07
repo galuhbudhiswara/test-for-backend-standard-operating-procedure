@@ -416,7 +416,7 @@ public function getObject(Request $request)
 
 class TblBuktiSetorMateraiService
 {
-    public function getFilteredObject() :Array
+    public function getFilteredObject() :array
     {
         $alias = $this->aliasHelper->findAlias('root');
 
@@ -437,48 +437,75 @@ Keep database queries organized in Repository classes instead of scattering them
 Bad:
 
 ```php
-#[Route('/api/users/active', methods: ['GET'])]
-public function getActiveUsers(): Response
-{
-    $qb = $this->em->createQueryBuilder();
-    $users = $qb->select('u')
-        ->from(User::class, 'u')
-        ->where('u.active = true')
-        ->orderBy('u.createdAt', 'DESC')
-        ->getQuery()
-        ->getResult();
+    private function setRekapPenawaran(): self
+    {
+        $qb = $this->createQueryBuilder($alias);
         
-    return $this->json($users);
-}
+        $qb->join(
+            TblPesertaLelang::class, $pesertaAlias,
+            Expr\Join::WITH,
+            $qb->expr()->eq(
+                sprintf('%s.id', $pesertaAlias),
+                sprintf('%s.peserta', $alias)
+            )
+        )->orderBy(
+                $qb->expr()->desc(sprintf('%s.value', $alias))
+        )->addOrderBy(
+            $qb->expr()->desc('waktuPenawaran')
+        );
+
+        $this->rekapPenawaran = $qb->getQuery()->getResult();
+
+        return $this;
+    }
 ```
 
 Good:
 
 ```php
-class UserRepository extends ServiceEntityRepository
-{
-    public function __construct(RegistryInterface $registry)
+    private function setRekapPenawaran(): self
     {
-        parent::__construct($registry, User::class);
+        $this->rekapPenawaran = $this->tblPesertaBiddingService->rekapitulasiPenawaran()->getQuery()->getResult();
+
+        return $this;
     }
 
-    public function findActiveUsers(): array
+    final class TblPesertaBiddingService extends AbstractService implements ServiceInterface
     {
-        return $this->createQueryBuilder('u')
-            ->where('u.active = true')
-            ->orderBy('u.createdAt', 'DESC')
-            ->getQuery()
-            ->getResult();
+        public function rekapitulasiPenawaran(): QueryBuilder
+        {
+            return $this->repository->rekapitulasiPenawaran(
+                $this->aliasHelper->findAlias('root'),
+            );
+        }
     }
-}
 
-#[Route('/api/users/active', methods: ['GET'])]
-public function getActiveUsers(): Response
-{
-    $users = $this->userRepository->findActiveUsers();
-    
-    return $this->json($users);
-}
+    final class TblPesertaBiddingRepository extends AbstractRepository implements TblPesertaBiddingRepositoryInterface
+    {
+        private function rekapitulasiPenawaran(
+            string $alias,
+        ): QueryBuilder
+        {
+            $pesertaAlias = 'peserta';
+
+            $qb = $this->createQueryBuilder($alias);
+            $qb->join(
+                TblPesertaLelang::class, $pesertaAlias,
+                Expr\Join::WITH,
+                $qb->expr()->eq(
+                    sprintf('%s.id', $pesertaAlias),
+                    sprintf('%s.peserta', $alias)
+                )
+            )->orderBy(
+                    $qb->expr()->desc(sprintf('%s.value', $alias))
+            )->addOrderBy(
+                $qb->expr()->desc('waktuPenawaran')
+            );
+
+            return $qb;
+        }
+    }
+
 ```
 
 ### **Use Constants and Enums for Magic Strings**
@@ -488,46 +515,46 @@ Avoid magic strings in conditionals. Use enums or constants for type safety and 
 Bad:
 
 ```php
-#[Route('/api/users/{id}/status', methods: ['PATCH'])]
-public function updateUserStatus(User $user, Request $request): Response
+public function updateUserStatus(): self
 {
-    $status = $request->getPayload()->get('status');
+    $status = $this->formData['status'];
     
     if ($status === 'active') {
-        $user->setIsActive(true);
+        $this->user->setIsActive(true);
     } elseif ($status === 'inactive') {
-        $user->setIsActive(false);
+        $this->user->setIsActive(false);
     } elseif ($status === 'banned') {
-        $user->setBanned(true);
+        $this->user->setBanned(true);
     }
     
-    $this->userRepository->save($user);
-    return $this->json($user);
+     $this->em->persist($this->user);
+
+     return $this;
 }
 ```
 
 Good:
 
 ```php
-enum UserStatus: string
-{
-    case ACTIVE = 'active';
-    case INACTIVE = 'inactive';
-    case BANNED = 'banned';
-}
+case ACTIVE = 'active';
+case INACTIVE = 'inactive';
+case BANNED = 'banned';
 
-#[Route('/api/users/{id}/status', methods: ['PATCH'])]
-public function updateUserStatus(User $user, Request $request): Response
+public function updateUserStatus(): self
 {
-    $status = UserStatus::tryFrom($request->getPayload()->get('status'));
+   $status = $this->formData['status'];
     
-    if ($status === null) {
-        return $this->json(['error' => 'Invalid status'], 400);
+    if ($status === self::ACTIVE) {
+        $this->user->setIsActive(true);
+    } elseif ($status === self::INACTIVE) {
+        $this->user->setIsActive(false);
+    } elseif ($status === self::BANNED) {
+        $this->user->setBanned(true);
     }
     
-    $this->userService->updateUserStatus($user, $status);
-    
-    return $this->json($user);
+     $this->em->persist($this->user);
+
+     return $this;
 }
 ```
 
