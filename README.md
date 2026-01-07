@@ -56,6 +56,10 @@ Good:
     }
 ```
 
+
+[🔝 Back to contents](#contents)
+
+
 ### **Validate Every Payload**
 
 Move validation from controllers to Request classes.
@@ -130,6 +134,10 @@ Good:
         }
     }
 ```
+
+
+[🔝 Back to contents](#contents)
+
 
 ### **Methods should do just one thing**
 
