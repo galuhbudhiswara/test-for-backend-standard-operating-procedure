@@ -8,8 +8,6 @@
 - [Entity Should Have Setter and Getter](#entity-should-have-setter-and-getter)
 - [Simple Query Should Be In Service Class](#simple-query-should-be-in-service-class)
 
-
-
 ### **Chaining Methods**
 
 Object-oriented programming technique that allows you to call multiple methods on a single object instance in a single, sequential statement.
@@ -60,9 +58,7 @@ Good:
     }
 ```
 
-
 [🔝 Back to contents](#contents)
-
 
 ### **Validate Every Payload**
 
@@ -88,9 +84,7 @@ Good:
             return $this->view($form, Response::HTTP_BAD_REQUEST);
         }
     }
-```
 
-```php
     final class TblUserWhatsappType extends AbstractType
     {
         public function buildForm(FormBuilderInterface $builder, array $options)
@@ -139,9 +133,7 @@ Good:
     }
 ```
 
-
 [🔝 Back to contents](#contents)
-
 
 ### **Methods should do just one thing**
 
@@ -243,9 +235,7 @@ Good:
     }
 ```
 
-
 [🔝 Back to contents](#contents)
-
 
 ### **Entity Should Have Setter and Getter**
 
@@ -393,7 +383,6 @@ Good:
 
 ```
 
-
 [🔝 Back to contents](#contents)
 
 ### **Simple Query Should Be In Service Class**
@@ -408,8 +397,6 @@ public function getObject(Request $request)
     $alias = $this->aliasHelper->findAlias('root');
     $qb = $this->tblBuktiSetorMateraiService->getQueryBuilder();
     //some filter logic
-
-
     
     return $qb->getQuery()->getResult();
     
