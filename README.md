@@ -1,6 +1,6 @@
 # Standar Operating Procedure 
 
-## Content
+## Contents
 
 - [Chaining Methods](#chaining-methods)
 - [Validate Every Payload](#validate-every-payload)
